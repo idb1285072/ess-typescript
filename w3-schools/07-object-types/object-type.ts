@@ -45,3 +45,12 @@ const ages: { admin: number; [userName: string]: number } = {
 };
 console.log(ages.admin);
 console.log(ages['Alice']);
+
+/*
+unknown requires type narrowing before use, any does not
+when accepting arbitrary JSON input - unknown
+disables compile time type safety - any
+ensure all union cases are handled - never
+undefined = missing/uninitialized, null = intentional empty
+void may return undefined, never never returns
+*/

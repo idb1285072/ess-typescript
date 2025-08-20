@@ -6,3 +6,7 @@ type User = {
 };
 
 let users: User | null = null;
+
+// null - intentional absence, 
+// explicitly set, 
+// reset or clear a variable

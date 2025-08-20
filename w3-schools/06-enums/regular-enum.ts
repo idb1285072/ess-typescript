@@ -1,4 +1,5 @@
-// enum = set of named constants
+// enum = a set of named constants
+
 // numeric enums
 enum Direction {
   Up = 1,
@@ -8,6 +9,11 @@ enum Direction {
 }
 console.log(Direction.Up); // 1
 console.log(Direction.Down);
+
+const move = (dir: Direction) => {
+  if (dir === Direction.Left) console.log('Moved left');
+};
+console.log(move(Direction.Left));
 
 // string enums
 enum Day {
@@ -21,6 +27,7 @@ enum Day {
 }
 console.log(Day.Monday); // 'MON'
 console.log(Day.Friday); // 'FRI'
+console.log(Day['Sunday']); // 'SUN'
 
 enum StatusCode {
   Success = 200,

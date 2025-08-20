@@ -4,7 +4,7 @@ let age = 30; // inferred as number
 let isAdmin = true; // inferred as boolean
 console.log(typeof name, typeof age, typeof isAdmin);
 
-// explicit type
+// explicit type: type annotation or type assignment
 let isActive: boolean = true;
 let userName: string = 'Murad';
 let userAge: number = 30;
