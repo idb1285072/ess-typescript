@@ -259,7 +259,7 @@ if (calendarBody) {
     return td;
   }
 
-   function bookDate(day, month, year) {
+  function bookDate(day: number, month: number, year: number) {
     // one user can book max one date
     // if (statusList.some((d) => d.userId === currentUser.id)) {
     //   return alert(
@@ -268,9 +268,13 @@ if (calendarBody) {
     // }
 
     // if pending then not booked another
-    if (statusList.some((d) => d.userId === currentUser.id && d.status==='Pending')) {
+    if (
+      statusList.some(
+        d => d.userId === currentUser.id && d.status === Status.Pending
+      )
+    ) {
       return alert(
-        "You already have a booking. Cancel it before booking a new date."
+        'You already have a booking. Cancel it before booking a new date.'
       );
     }
 
@@ -279,12 +283,12 @@ if (calendarBody) {
       month,
       year,
       userId: currentUser.id,
-      status: "Pending",
+      status: Status.Pending,
       timestamp: Date.now(),
     };
 
     const existingIndex = statusList.findIndex(
-      (d) => d.day === day && d.month === month && d.year === year
+      d => d.day === day && d.month === month && d.year === year
     );
     if (existingIndex > -1) {
       statusList[existingIndex] = newBooking;
@@ -292,7 +296,7 @@ if (calendarBody) {
       statusList.push(newBooking);
     }
 
-    setLocal("status", statusList);
+    setLocal('status', statusList);
     alert(
       `Booking requested for ${day}/${
         month + 1
@@ -302,9 +306,9 @@ if (calendarBody) {
   }
 
   // Auto-update calendar when admin updates bookings
-  window.addEventListener("storage", (e) => {
-    if (e.key === "status") {
-      statusList = getLocal("status");
+  window.addEventListener('storage', e => {
+    if (e.key === 'status') {
+      statusList = getLocal('status', []);
       renderCalendar();
     }
   });

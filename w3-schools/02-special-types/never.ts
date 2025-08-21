@@ -20,7 +20,7 @@ const area = (shape: Shape) => {
     case 'triangle':
       return 0.5 * shape.base * shape.height;
     default:
-      const exhaustiveCheck:never = shape;
+      const exhaustiveCheck: never = shape;
       return exhaustiveCheck;
   }
 };
@@ -47,5 +47,6 @@ let impossibleValue: never;
 
 // never - functions that never return (throw, infinite loop)
 
-// void - return but no value
+// void - return undefined or return no return value
 // never - doesn't return at all
+// never - it's not possible that this type could happen
