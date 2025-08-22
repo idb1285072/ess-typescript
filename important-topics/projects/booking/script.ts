@@ -1,19 +1,25 @@
-// ================== User Setup ==================
-const enum Status {
-  Unavailable,
+// ================== Types & Enums ==================
+enum BookingStatus {
   Pending,
-  Confirm,
+  Confirmed,
 }
 
-type User = { id: number; username: string; password: string };
-type StatusLog = {
+interface User {
+  id: number;
+  username: string;
+  password: string;
+}
+
+interface Booking {
   day: number;
-  month: number;
+  month: number; // 0-based (JS Date)
   year: number;
   userId: number;
-  status: Status;
+  status: BookingStatus;
   timestamp: number;
-};
+}
+
+// ================== Default Data ==================
 const DEFAULT_USERS: User[] = [
   { id: 0, username: 'admin', password: '@admin123' },
   { id: 1, username: 'user1', password: '@user1' },
@@ -23,36 +29,36 @@ const DEFAULT_USERS: User[] = [
   { id: 5, username: 'user5', password: '@user5' },
 ];
 
-initLocalStorage('users', DEFAULT_USERS);
-initLocalStorage('status', [
+initLocalStorage<User[]>('users', DEFAULT_USERS);
+initLocalStorage<Booking[]>('status', [
   {
     day: 2,
     month: 6,
     year: 2025,
     userId: 3,
-    status: Status.Confirm,
-    timestamp: 1755682257258,
+    status: BookingStatus.Confirmed,
+    timestamp: Date.now(),
   },
 ]);
 
 // ================== Local Storage Helpers ==================
-function initLocalStorage<T>(key: string, defaultValue: T) {
+function initLocalStorage<T>(key: string, defaultValue: T): void {
   if (!localStorage.getItem(key)) {
-    localStorage.setItem(key, JSON.stringify(defaultValue));
+    setLocal<T>(key, defaultValue);
   }
 }
 
-function getLocal<T>(key: string, fallback: T): T {
+function getLocal<T>(key: string): T {
   const item = localStorage.getItem(key);
-  return item ? (JSON.parse(item) as T) : fallback;
+  return item ? (JSON.parse(item) as T) : ([] as unknown as T);
 }
 
-function setLocal<T>(key: string, value: T) {
+function setLocal<T>(key: string, value: T): void {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
 // ================== Cookie Helpers ==================
-function generateToken(length = 32) {
+function generateToken(length = 32): string {
   const chars =
     'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   return Array.from(
@@ -61,11 +67,12 @@ function generateToken(length = 32) {
   ).join('');
 }
 
-function setCookie(name: string, value: string, minutes: number) {
+function setCookie(name: string, value: string, minutes: number): void {
   const expires = new Date(Date.now() + minutes * 60000).toUTCString();
   document.cookie = `${name}=${value};expires=${expires};path=/`;
 }
-function getCookie(name: string) {
+
+function getCookie(name: string): string {
   return (
     document.cookie
       .split(';')
@@ -74,60 +81,67 @@ function getCookie(name: string) {
       ?.split('=')[1] || ''
   );
 }
-function eraseCookie(name: string) {
+
+function eraseCookie(name: string): void {
   document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
 }
 
 // ================== Auth ==================
-function login(username: string, password: string) {
-  let users = getLocal<User[]>('users', []);
-  let user: User | undefined;
-  if (Array.isArray(users)) {
-    user = (users as User[]).find(
-      (u: User) => u.username === username && u.password === password
-    );
-  }
+function login(username: string, password: string): void {
+  const users = getLocal<User[]>('users');
+  const user = users.find(
+    u => u.username === username && u.password === password
+  );
 
-  if (!user) return alert('Invalid username or password');
+  if (!user) {
+    alert('Invalid username or password');
+    return;
+  }
 
   const token = generateToken();
   setCookie('auth_token', token, 30);
-  setLocal('currentUser', user);
+  setLocal<User>('currentUser', user);
 
   window.location.href =
     user.username === 'admin' ? 'admin.html' : 'calendar.html';
 }
 
-function logout() {
+function logout(): void {
   eraseCookie('auth_token');
   localStorage.removeItem('currentUser');
   window.location.href = 'index.html';
 }
 
-function isLoggedIn() {
-  return getCookie('auth_token') && localStorage.getItem('currentUser');
+function isLoggedIn(): boolean {
+  return Boolean(
+    getCookie('auth_token') && localStorage.getItem('currentUser')
+  );
 }
 
 // ================== Login Page ==================
 const loginBtn = document.getElementById('login');
 if (loginBtn) {
   loginBtn.addEventListener('click', () => {
-    const username = document.getElementById('username') as HTMLInputElement;
-    const password = document.getElementById('password') as HTMLInputElement;
-    login(username.value.trim(), password.value.trim());
+    const username = (
+      document.getElementById('username') as HTMLInputElement
+    ).value.trim();
+    const password = (
+      document.getElementById('password') as HTMLInputElement
+    ).value.trim();
+    login(username, password);
   });
 }
 
 // ================== Calendar Page ==================
-const calendarBody = document.getElementById('calendar-body');
+const calendarBody = document.getElementById(
+  'calendar-body'
+) as HTMLTableSectionElement;
 if (calendarBody) {
   if (!isLoggedIn()) window.location.href = 'index.html';
-  const currentUser = getLocal<User>('currentUser', {} as User);
-  const users = getLocal<User[]>('users', []);
-  const calendarBody = document.getElementById(
-    'calendar-body'
-  ) as HTMLTableSectionElement;
-  let statusList = getLocal<StatusLog[]>('status', []);
+
+  const currentUser = getLocal<User>('currentUser');
+  const users = getLocal<User[]>('users');
+  let statusList = getLocal<Booking[]>('status');
   let displayedDate = new Date();
 
   const prevMonthBtn = document.getElementById(
@@ -136,29 +150,28 @@ if (calendarBody) {
   const nextMonthBtn = document.getElementById(
     'next-month'
   ) as HTMLButtonElement;
+  const logoutBtn = document.getElementById('logout');
 
   prevMonthBtn.addEventListener('click', () => changeMonth(-1));
   nextMonthBtn.addEventListener('click', () => changeMonth(1));
-  (document.getElementById('logout') as HTMLButtonElement).addEventListener(
-    'click',
-    logout
-  );
+  logoutBtn?.addEventListener('click', logout);
 
-  function changeMonth(step: number) {
+  function changeMonth(step: number): void {
     displayedDate.setMonth(displayedDate.getMonth() + step);
-    // renderCalendar();
+    renderCalendar();
   }
 
-  function updateCalendarTitle() {
-    (
-      document.getElementById('calendar-title') as HTMLHeadingElement
-    ).textContent = displayedDate.toLocaleDateString('en-US', {
-      month: 'long',
-      year: 'numeric',
-    });
+  function updateCalendarTitle(): void {
+    const title = document.getElementById('calendar-title');
+    if (title) {
+      title.textContent = displayedDate.toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric',
+      });
+    }
   }
 
-  function renderCalendar() {
+  function renderCalendar(): void {
     updateCalendarTitle();
     calendarBody.innerHTML = '';
 
@@ -166,7 +179,6 @@ if (calendarBody) {
     const month = displayedDate.getMonth();
     const todayDate = new Date();
 
-    // disabled previous button
     prevMonthBtn.disabled =
       month === todayDate.getMonth() && year === todayDate.getFullYear();
 
@@ -176,7 +188,7 @@ if (calendarBody) {
     let row = document.createElement('tr');
     for (let i = 0; i < startDay; i++) row.appendChild(emptyCell());
 
-    for (let day = 1; day < startDay; day++) {
+    for (let day = 1; day <= totalDays; day++) {
       if (row.children.length === 7) {
         calendarBody.appendChild(row);
         row = document.createElement('tr');
@@ -199,7 +211,7 @@ if (calendarBody) {
     wrapper.className = 'd-flex flex-column align-items-center';
 
     const btn = document.createElement('button');
-    btn.textContent = day.toString();
+    btn.textContent = String(day);
     btn.style.width = '100%';
     btn.style.borderRadius = '.75rem';
 
@@ -209,13 +221,10 @@ if (calendarBody) {
     const dayStatus = statusList.find(
       d => d.day === day && d.month === month && d.year === year
     );
+    const isWeekend = [0, 6].includes(new Date(year, month, day).getDay());
+    const isPastDay = new Date(year, month, day) < todayDate;
 
-    const isWeekend: boolean = [0, 6].includes(
-      new Date(year, month, day).getDay()
-    );
-    const isPastDay: boolean = new Date(year, month, day) < todayDate;
-
-    if (dayStatus?.status === Status.Confirm) {
+    if (dayStatus?.status === BookingStatus.Confirmed) {
       btn.disabled = true;
       btn.className = 'booked';
       btn.textContent = `${day} 🔒`;
@@ -223,7 +232,7 @@ if (calendarBody) {
         users.find(u => u.id === dayStatus.userId)?.username || 'Unknown'
       }`;
       label.classList.add('text-danger');
-    } else if (dayStatus?.status === Status.Pending) {
+    } else if (dayStatus?.status === BookingStatus.Pending) {
       btn.disabled = true;
       btn.className = 'booked';
       btn.textContent = `${day} ⏳`;
@@ -231,17 +240,13 @@ if (calendarBody) {
         users.find(u => u.id === dayStatus.userId)?.username || 'Unknown'
       }`;
       label.classList.add('text-warning');
-    }
-    // Past or weekend days without booking are unavailable
-    else if (isPastDay || isWeekend) {
+    } else if (isPastDay || isWeekend) {
       btn.disabled = true;
       btn.className = 'booked';
       btn.textContent = `${day} 🔒`;
       label.textContent = isWeekend ? 'Weekend' : 'Unavailable';
       label.classList.add('text-danger');
-    }
-    // Available days
-    else {
+    } else {
       btn.className = 'available';
       btn.addEventListener('click', () => bookDate(day, month, year));
       label.textContent = 'Available';
@@ -259,31 +264,22 @@ if (calendarBody) {
     return td;
   }
 
-  function bookDate(day: number, month: number, year: number) {
-    // one user can book max one date
-    // if (statusList.some((d) => d.userId === currentUser.id)) {
-    //   return alert(
-    //     "You already have a booking. Cancel it before booking a new date."
-    //   );
-    // }
-
-    // if pending then not booked another
+  function bookDate(day: number, month: number, year: number): void {
     if (
       statusList.some(
-        d => d.userId === currentUser.id && d.status === Status.Pending
+        d => d.userId === currentUser.id && d.status === BookingStatus.Pending
       )
     ) {
-      return alert(
-        'You already have a booking. Cancel it before booking a new date.'
-      );
+      alert('You already have a booking. Cancel it before booking a new date.');
+      return;
     }
 
-    const newBooking = {
+    const newBooking: Booking = {
       day,
       month,
       year,
       userId: currentUser.id,
-      status: Status.Pending,
+      status: BookingStatus.Pending,
       timestamp: Date.now(),
     };
 
@@ -296,7 +292,7 @@ if (calendarBody) {
       statusList.push(newBooking);
     }
 
-    setLocal('status', statusList);
+    setLocal<Booking[]>('status', statusList);
     alert(
       `Booking requested for ${day}/${
         month + 1
@@ -305,13 +301,103 @@ if (calendarBody) {
     renderCalendar();
   }
 
-  // Auto-update calendar when admin updates bookings
   window.addEventListener('storage', e => {
     if (e.key === 'status') {
-      statusList = getLocal('status', []);
+      statusList = getLocal<Booking[]>('status');
       renderCalendar();
     }
   });
 
   renderCalendar();
+}
+
+// ================== Admin Page ==================
+const bookingListEl = document.getElementById("booking-list") as HTMLTableSectionElement | null;
+
+if (bookingListEl) {
+  const renderBookings = (): void => {
+    let statusList = getLocal<Booking[]>("status");
+    const users = getLocal<User[]>("users");
+    const now = Date.now();
+
+    // Expire pending bookings older than 5 minutes
+    statusList = statusList.filter(
+      (b) => !(b.status === BookingStatus.Pending && now - b.timestamp > 5 * 60_000)
+    );
+
+    bookingListEl.innerHTML = "";
+
+    statusList.forEach((b, index) => {
+      const user = users.find((u) => u.id === b.userId)?.username ?? "Unknown";
+      const date = `${b.day}/${b.month + 1}/${b.year}`;
+      let timeLeft = "-";
+
+      if (b.status === BookingStatus.Pending) {
+        const remaining = 5 * 60_000 - (now - b.timestamp);
+        timeLeft = remaining > 0 ? `${Math.floor(remaining / 1000)}s` : "Expired";
+      }
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${user}</td>
+        <td>${date}</td>
+        <td>${b.status}</td>
+        <td>${timeLeft}</td>
+        <td>
+          ${
+            b.status === BookingStatus.Pending
+              ? `
+                <button class="btn btn-success btn-sm" data-action="confirm" data-index="${index}">Confirm</button>
+                <button class="btn btn-danger btn-sm" data-action="reject" data-index="${index}">Reject</button>
+              `
+              : "Confirmed"
+          }
+        </td>
+      `;
+      bookingListEl.appendChild(row);
+    });
+
+    setLocal("status", statusList);
+  };
+
+  const confirmBooking = (index: number): void => {
+    const statusList = getLocal<Booking[]>("status");
+    if (statusList[index]) {
+      statusList[index].status = BookingStatus.Confirmed;
+      setLocal("status", statusList);
+      renderBookings();
+    }
+  };
+
+  const rejectBooking = (index: number): void => {
+    const statusList = getLocal<Booking[]>("status");
+    if (statusList[index]) {
+      statusList.splice(index, 1);
+      setLocal("status", statusList);
+      renderBookings();
+    }
+  };
+
+  // Event delegation for confirm/reject buttons
+  bookingListEl.addEventListener("click", (e) => {
+    const target = e.target as HTMLButtonElement;
+    if (!target.dataset.action || target.dataset.index === undefined) return;
+
+    const index = Number(target.dataset.index);
+    if (target.dataset.action === "confirm") {
+      confirmBooking(index);
+    } else if (target.dataset.action === "reject") {
+      rejectBooking(index);
+    }
+  });
+
+  // Auto-refresh every second
+  setInterval(renderBookings, 1000);
+  renderBookings();
+
+  // Calendar navigation
+  const calendarBtn = document.getElementById("calendar-btn") as HTMLButtonElement | null;
+  calendarBtn?.addEventListener("click", () => {
+    window.location.href = "calendar.html";
+  });
 }

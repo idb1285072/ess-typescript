@@ -1,3 +1,11 @@
+function longest<Type extends { length: number }>(a: Type, b: Type) {
+  if (a.length >= b.length) return a;
+  else return b;
+}
+const longestArray = longest([1, 2], [1, 2, 3]);
+const longestString = longest('Raj', 'Master');
+// const notOk = longest(23, 43);
+
 function mergeObject<T, U>(obj1: T, obj2: U): T & U {
   return { ...obj1, ...obj2 };
 }
