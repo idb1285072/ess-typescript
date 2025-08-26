@@ -4,13 +4,19 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy:booking": "gh-pages -d important-topics/projects/booking -b gh-pages -d important-topics/projects/booking --dest important-topics/projects/booking",
+    "deploy:expense": "gh-pages -d important-topics/projects/expense-tracker -b gh-pages -d important-topics/projects/expense-tracker --dest important-topics/projects/expense-tracker",
+    "deploy:library": "gh-pages -d important-topics/projects/library-manager -b gh-pages -d important-topics/projects/library-manager --dest important-topics/projects/library-manager",
+    "deploy:student": "gh-pages -d important-topics/projects/student-course -b gh-pages -d important-topics/projects/student-course --dest important-topics/projects/student-course",
+    "deploy:all": "npm run deploy:booking && npm run deploy:expense && npm run deploy:library && npm run deploy:student"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
+    "gh-pages": "^6.3.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.4",
     "typescript": "^5.9.2"
