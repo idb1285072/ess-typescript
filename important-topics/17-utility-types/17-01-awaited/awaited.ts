@@ -1,4 +1,5 @@
 // await in async functions or .then() methods on Promises - unwrap Promise types
+// promise resolved type
 type A = Awaited<Promise<string>>;
 type B = Awaited<Promise<Promise<number>>>;
 type C = Awaited<string | Promise<number>>;
@@ -20,3 +21,9 @@ async function example(): Promise<string> {
 }
 type J = Awaited<typeof example>; // ()=>Promise<string>
 type K = Awaited<ReturnType<typeof example>>; // string
+
+async function getUser() {
+  return { id: 1, name: 'Bob' };
+}
+type User = Awaited<ReturnType<typeof getUser>>;
+// { id: number; name: string }

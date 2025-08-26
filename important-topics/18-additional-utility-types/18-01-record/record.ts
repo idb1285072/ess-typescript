@@ -26,4 +26,20 @@ const labels: StatusLabels = {
   [Status.Pending]: 'Pending',
 };
 
+// lookup table/dictionary
+type CountryCode = 'US' | 'CA' | 'MX';
+const countryNames: Record<CountryCode, string> = {
+  US: 'United States',
+  CA: 'Canada',
+  MX: 'Mexico',
+};
+
+// unions to dynamic object structures
+type FeatureFlag = 'darkMode' | 'betaUser' | 'analytics';
+const flags: Record<FeatureFlag, boolean> = {
+  darkMode: true,
+  betaUser: false,
+  analytics: true,
+};
+
 // use Record instead of index signatures

@@ -3,6 +3,9 @@ class Counter {
   static increment() {
     Counter.count++;
   }
+  constructor() {
+    Counter.count++;
+  }
   static getCount() {
     return Counter.count;
   }
@@ -11,8 +14,8 @@ class Counter {
 Counter.increment();
 Counter.increment();
 Counter.increment();
-console.log(Counter.getCount());
 const c = new Counter();
+console.log(Counter.getCount());
 // console.log(c.increment());
 
 console.log(Math.PI); // static property

@@ -25,7 +25,7 @@ class Database {
 
   static {
     Database.url = 'mongodb://localhost:27017';
-    Database.connection = `Connected to ${Database.url}`;
+    Database.connection = `Connected to ${this.url}`; // this can use in static block in latest typescript (4.4+)
     console.log('Database initialized.');
   }
 

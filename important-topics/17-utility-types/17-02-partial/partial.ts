@@ -8,7 +8,12 @@ interface User {
 }
 
 type PartialUser = Partial<User>;
-const updateUser: PartialUser = { name: 'Alice' };
+
+function updateUser(id: number, updates: Partial<User>) {
+  // apply only the updates
+}
+updateUser(1, { name: 'Murad' });
+updateUser(1, { email: 'murad@gmail.com', age: 43 });
 
 // readonly
 interface Config {
@@ -44,3 +49,12 @@ type PartialPerson = {
 type x = Partial<string>; // string
 
 // update, config, flexible input
+
+interface CreateUserDTO {
+  name: string;
+  email: string;
+  password: string;
+}
+
+type UpdateUserDTO = Partial<CreateUserDTO>;
+// all fields optional for PATCH request

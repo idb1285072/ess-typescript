@@ -42,4 +42,4 @@ processUser({ id: "2", name: null }); // runtime error
 
 
 type X = { x: string | null };
-type Y = NonNullable<X>; // { x: string | null }still contains null
+type Y = NonNullable<X>; // { x: string | null } still contains null

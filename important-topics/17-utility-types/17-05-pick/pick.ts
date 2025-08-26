@@ -1,18 +1,46 @@
 interface User {
-  id: number;
+  id: string;
   name: string;
   email: string;
-  isAdmin: boolean;
+  passwordHash: string;
+  role: 'admin' | 'user';
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-type UserPublic = Pick<User, 'id' | 'name'>;
+type PublicUserProfile = Pick<User, 'id' | 'name' | 'role' | 'createdAt'>;
 /* Equivalent to:
-type UserPublic = {
-  id: number;
+type PublicUserProfile = {
+  id: string;
   name: string;
+  role: "admin" | "user";
+  createdAt: Date;
 };
 */
-const user: UserPublic = { id: 1, name: 'Alice' };
+function toPublicProfile(user: User): PublicUserProfile {
+  const { id, name, role, createdAt } = user;
+  return { id, name, role, createdAt };
+}
+
+interface Post {
+  id: string;
+  title: string;
+  content: string;
+  author: User;
+}
+
+type PostSummary = Pick<Post, 'id' | 'title'> & {
+  author: Pick<User, 'id' | 'name'>;
+};
+
+const summary: PostSummary = {
+  id: 'p1',
+  title: 'Clean Architecture in TypeScript',
+  author: {
+    id: 'u1',
+    name: 'Murad',
+  },
+};
 
 // DTO
 
